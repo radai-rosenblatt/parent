@@ -1,0 +1,221 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>net.radai</groupId>
+    <artifactId>parent</artifactId>
+    <packaging>pom</packaging>
+    <version>1.0-SNAPSHOT</version>
+
+    <name>parent</name>
+    <url>https://github.com/radai-rosenblatt/parent</url>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <scm.provider.jgit.version>1.9-SNAPSHOT</scm.provider.jgit.version>
+        <local.maven.repository.path>${project.build.directory}/maven-repository</local.maven.repository.path>
+        <remote.maven.repository.owner>radai-rosenblatt</remote.maven.repository.owner>
+        <remote.maven.repository.project>maven-repository</remote.maven.repository.project>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-scm-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>check out current state of repository</id>
+                        <phase>deploy</phase>
+                        <goals>
+                            <goal>checkout</goal>
+                        </goals>
+                        <configuration>
+                            <checkoutDirectory>${local.maven.repository.path}</checkoutDirectory>
+                            <connectionType>developerConnection</connectionType>
+                            <developerConnectionUrl>scm:git:https://github.com/${remote.maven.repository.owner}/${remote.maven.repository.project}.git</developerConnectionUrl>
+                            <scmVersion>master</scmVersion> <!-- we always want to work with the master branch of the maven-repository project -->
+                            <scmVersionType>branch</scmVersionType>
+                            <providerImplementations>
+                                <git>jgit</git>
+                            </providerImplementations>
+                        </configuration>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.maven.scm</groupId>
+                        <artifactId>maven-scm-provider-jgit</artifactId>
+                        <version>${scm.provider.jgit.version}</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>default-deploy</id>
+                        <configuration>
+                            <skip>true</skip> <!-- need to disable default-deploy otherwise it'll run before our git clone above -->
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>deploy artifacts to checked out repository</id>
+                        <phase>deploy</phase>
+                        <goals>
+                            <goal>deploy</goal>
+                        </goals>
+                        <configuration>
+                            <altDeploymentRepository>build.repo::default::file://${local.maven.repository.path}</altDeploymentRepository>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>com.github.github</groupId>
+                <artifactId>site-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>merge updated repository back to github</id>
+                        <phase>deploy</phase>
+                        <goals>
+                            <goal>site</goal>
+                        </goals>
+                        <configuration>
+                            <repositoryOwner>${remote.maven.repository.owner}</repositoryOwner>
+                            <repositoryName>${remote.maven.repository.project}</repositoryName>
+                            <branch>refs/heads/master</branch>
+                            <outputDirectory>${local.maven.repository.path}</outputDirectory>
+                            <excludes>
+                                <exclude>.git/**/*</exclude> <!-- dont try pushing the .git directory -->
+                            </excludes>
+                            <message>deploy maven artifacts for ${project.groupId}:${project.artifactId}:${project.version}</message>
+                            <noJekyll>true</noJekyll>
+                            <merge>true</merge>
+                            <server>github</server> <!-- must match a <server> in settings.xml for credentials -->
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+
+        <pluginManagement>
+            <plugins>
+
+                <!-- official maven plugins -->
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-clean-plugin</artifactId>
+                    <version>2.5</version>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.1</version>
+                    <configuration>
+                        <source>1.7</source>
+                        <target>1.7</target>
+                    </configuration>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-deploy-plugin</artifactId>
+                    <version>2.7</version>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-antrun-plugin</artifactId>
+                    <version>1.7</version>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-scm-plugin</artifactId>
+                    <version>1.8.1</version>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-dependency-plugin</artifactId>
+                    <version>2.8</version>
+                </plugin>
+
+                <!-- 3rd parties -->
+
+                <plugin>
+                    <groupId>com.github.github</groupId>
+                    <artifactId>site-maven-plugin</artifactId>
+                    <version>0.8</version>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.codehaus.gmaven</groupId>
+                    <artifactId>gmaven-plugin</artifactId>
+                    <version>1.5</version>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>build-helper-maven-plugin</artifactId>
+                    <version>1.8</version>
+                </plugin>
+
+            </plugins>
+        </pluginManagement>
+    </build>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.apache.maven.scm</groupId>
+                <artifactId>maven-scm-provider-jgit</artifactId>
+                <version>${scm.provider.jgit.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <repositories>
+        <repository>
+            <id>radai</id>
+            <url>https://raw.github.com/radai-rosenblatt/maven-repository/master</url>
+        </repository>
+        <repository>
+            <id>apache.snapshots</id>
+            <url>https://repository.apache.org/content/repositories/snapshots/</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+        </repository>
+    </repositories>
+
+    <pluginRepositories>
+        <pluginRepository>
+            <id>radai</id>
+            <url>https://raw.github.com/radai-rosenblatt/maven-repository/master</url>
+        </pluginRepository>
+        <pluginRepository>
+            <id>apache.snapshots</id>
+            <url>https://repository.apache.org/content/repositories/snapshots/</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+        </pluginRepository>
+    </pluginRepositories>
+
+    <distributionManagement>
+        <repository>
+            <id>radai</id>
+            <url>https://raw.github.com/radai-rosenblatt/maven-repository/master/</url>
+        </repository>
+        <snapshotRepository>
+            <id>radai</id>
+            <url>https://raw.github.com/radai-rosenblatt/maven-repository/master/</url>
+        </snapshotRepository>
+    </distributionManagement>
+</project>
