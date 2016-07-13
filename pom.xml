@@ -6,7 +6,7 @@
     <groupId>net.radai</groupId>
     <artifactId>parent</artifactId>
     <packaging>pom</packaging>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0</version>
 
     <name>parent</name>
 
@@ -36,7 +36,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <min.maven.version>3.3.9</min.maven.version>
-        <gpg.key>16825F7F</gpg.key>
+        <gpg.key>0C7871F7</gpg.key>
     </properties>
 
     <prerequisites>
