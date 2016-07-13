@@ -1,4 +1,4 @@
 parent
 ======
 
-parent pom for maven project that contains useful configurations, settings and options
+parent pom for maven projects that contains useful configurations, settings and options
